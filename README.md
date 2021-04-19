@@ -36,16 +36,19 @@ Separamos los reducers para mantener un código mas ordenado
 export const toDoReducer = (state = [], action) => {
 
     switch (action.type) {
-        
+
         case 'add':
             return [...state, action.payload];
-
+        case 'delete':
+            return state.filter( toDo => toDo.id !== action.payload);
+        case 'toggle':
+            return state.map( toDo => (toDo.id === action.payload) ? {...toDo, done: !toDo.done} : toDo)
         default:
             return state;
     }
 }
 
-// Hooks useForm
+// Hook useForm
 import { useState } from 'react';
 
 export const useForm = ( initialState = {} ) => {
@@ -71,17 +74,13 @@ export const useForm = ( initialState = {} ) => {
 
 Aplicando useReducer ejemplo sencillo
 ```javascript
-import React, { useReducer } from 'react'
+import React, { useReducer, useEffect } from 'react'
 import { toDoReducer } from './toDoReducer';
 import { useForm } from './hooks/useForm';
 
-const initialState = [
-    {
-        id: new Date().getTime(),
-        description: "Aprender React",
-        done: false
-    }
-]
+const init = () => {
+    return JSON.parse(localStorage.getItem('toDos')) || [];
+}
 
 export const ToDoApp = () => {
 
@@ -91,6 +90,18 @@ export const ToDoApp = () => {
         description: ""
     })
 
+    useEffect(() => {
+        localStorage.setItem('toDos', JSON.stringify(toDos))
+    }, [toDos])
+
+    const handleDelete = (toDoID) => {
+        dispatch({type: "delete", payload: toDoID});
+    }
+
+    const handleToggle = (toDoID) => {
+        dispatch({type: 'toggle', payload: toDoID});
+    }
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -99,12 +110,7 @@ export const ToDoApp = () => {
         }
         const newToDo = {id: new Date().getTime(), description, done: false};
 
-        const action = {
-            type: "add",
-            payload: newToDo
-        };
-
-        dispatch(action);
+        dispatch({type: 'add', payload: newToDo});
         reset();
     }
 
@@ -112,22 +118,23 @@ export const ToDoApp = () => {
         <div>
             <h1>ToDo App ( {toDos.length} )</h1>
             <hr />
-            <div>
-                <div>
+            <div className="row">
+                <div className="col-7">
                     <ul>
-                        {toDos.map( (item, i) => (
+                        {toDos.map( (toDo, i) => (
                             <li
-                                key={item.id}
+                                key={toDo.id}
+                                className="list-group-item"
                             >
-                                <p>{i + 1}. {item.description}</p>
-                                <button>
+                                <p className={toDo.done ? "complete" : ""} onClick={ () => handleToggle(toDo.id)} >{i + 1}. {toDo.description}</p>
+                                <button className="btn btn-danger" onClick={() => handleDelete(toDo.id)}>
                                     Borrar
                                 </button>
                             </li>
                         ))}
                     </ul>
                 </div>
-                <div>
+                <div className="col-5">
                     <h4>Agregar ToDos</h4>
                     <hr />
 
@@ -136,11 +143,12 @@ export const ToDoApp = () => {
                             type="text"
                             name="description"
                             value={description}
+                            className="form-control"
                             placeholder="Aprender..."
                             autoComplete="off"
                             onChange={handleInputChange}
                         />
-                        <button>
+                        <button className="btn btn-outline-primary mt-1 btn-block">
                             Agregar
                         </button>
                     </form> 

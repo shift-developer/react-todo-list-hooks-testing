@@ -1,23 +1,31 @@
-import React, { useReducer } from 'react'
+import React, { useReducer, useEffect } from 'react'
 import { toDoReducer } from './toDoReducer';
 import { useForm } from './hooks/useForm';
 import './styles/styles.css';
 
-const initialState = [
-    {
-        id: new Date().getTime(),
-        description: "Aprender React",
-        done: false
-    }
-]
+const init = () => {
+    return JSON.parse(localStorage.getItem('toDos')) || [];
+}
 
 export const ToDoApp = () => {
 
-    const [ toDos, dispatch ] = useReducer(toDoReducer, initialState);
+    const [ toDos, dispatch ] = useReducer(toDoReducer, [], init);
 
     const [ { description }, handleInputChange, reset] = useForm({
         description: ""
     })
+
+    useEffect(() => {
+        localStorage.setItem('toDos', JSON.stringify(toDos))
+    }, [toDos])
+
+    const handleDelete = (toDoID) => {
+        dispatch({type: "delete", payload: toDoID});
+    }
+
+    const handleToggle = (toDoID) => {
+        dispatch({type: 'toggle', payload: toDoID});
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -27,12 +35,7 @@ export const ToDoApp = () => {
         }
         const newToDo = {id: new Date().getTime(), description, done: false};
 
-        const action = {
-            type: "add",
-            payload: newToDo
-        };
-
-        dispatch(action);
+        dispatch({type: 'add', payload: newToDo});
         reset();
     }
 
@@ -48,8 +51,8 @@ export const ToDoApp = () => {
                                 key={item.id}
                                 className="list-group-item"
                             >
-                                <p className="text-center">{i + 1}. {item.description}</p>
-                                <button className="btn btn-danger">
+                                <p className={item.done ? "complete" : ""} onClick={ () => handleToggle(item.id)} >{i + 1}. {item.description}</p>
+                                <button className="btn btn-danger" onClick={() => handleDelete(item.id)}>
                                     Borrar
                                 </button>
                             </li>
