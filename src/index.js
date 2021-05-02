@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { ToDoApp } from './components/ToDoApp';
+import { MainApp } from './components/Curso/09-useContext/MainApp';
+//import { ToDoApp } from './components/ToDoApp';
 
 ReactDOM.render(
-  <ToDoApp />,
+  <MainApp />,
   document.getElementById('root')
 );
 
