@@ -499,5 +499,359 @@ describe('Pruebas en useFetch', () => {
 
 Pruebas sobre MultipleCustomHooks
 
+```javascript
+import React from 'react'
+import { shallow } from "enzyme"
+import { MultipleCustomHooks } from '../../../components/Curso/03-examples/MultipleCustomHooks'
+import { useFetch } from '../../../components/hooks/useFetch'
+import { useCounter } from '../../../components/hooks/useCounter'
+jest.mock('../../../components/hooks/useFetch')
+jest.mock('../../../components/hooks/useCounter')
 
+describe('Pruebas en <MultipleCustomHooks />', () => {
+
+    beforeEach( () => {
+        useCounter.mockReturnValue({
+            counter: 10,
+            increment: () => {}
+        });
+    })
+    
+    test('debe de mostrarse correctamente', () => {
+
+        useFetch.mockReturnValue({
+            data: null,
+            loading: true,
+            error: null
+        })
+        
+        const wrapper = shallow(<MultipleCustomHooks />);
+        expect(wrapper).toMatchSnapshot();
+    })
+
+    test('debe de mostrar la informacion', () => {
+        
+        useFetch.mockReturnValue({
+            data: [{
+                author: "Lenny",
+                quote: "Hello World"
+            }],
+            loading: false,
+            error: null
+        });
+
+        const wrapper = shallow(<MultipleCustomHooks />);
+        expect(wrapper.find('.alert').exists()).toBe(false)
+        expect(wrapper.find('.mb-0').text().trim()).toBe('Hello World')
+        expect(wrapper.find('footer').text().trim()).toBe('Lenny')
+    })
+    
+    
+})
+```
+
+Interacciones con el useState
+```javascript
+import React from 'react'
+import { shallow } from 'enzyme'
+
+import { RealExampleRef } from '../../../components/Curso/04-useRef/RealExampleRef'
+
+
+describe('Pruebas en <RealExampleRef/>', () => {
+    
+    const wrapper = shallow(<RealExampleRef/>)
+
+    test('debe mostrarse correctamente', () => {
+        
+        expect(wrapper).toMatchSnapshot();
+        expect(wrapper.find('MultipleCustomHooks').exists()).toBe(false)
+    })
+
+    test('debe mostrar el componente', () => {
+        wrapper.find('button').simulate('click');
+        expect(wrapper.find('MultipleCustomHooks').exists()).toBe(true)
+    })
+    
+    
+
+})
+```
+
+Pruebas sobre el Reducer
+
+```javascript
+import { todoReducer } from "../../../components/Curso/08-useReducer/todoReducer"
+import { demoTodos } from "../../fixtures/demoTodos";
+
+
+describe('Pruebas en todoReducer', () => {
+    
+    test('debe de retornar el estado por defecto', () => {
+        const state = todoReducer(demoTodos, {});
+
+        expect(state).toEqual(demoTodos)
+
+    })
+
+    test('debe de agregar un TO DO', () => {
+        const newToDo = {
+            id: 3,
+            desc: 'Aprender Angular',
+            done: false
+        };
+
+        const action = {
+            type: 'add', 
+            payload: newToDo
+        };
+
+        const state = todoReducer(demoTodos, action);
+
+        expect(state.length).toBe(3);
+        expect(state).toEqual([...demoTodos, newToDo])
+    })
+
+    test('debe de borrar el TO DO', () => {
+        const action = {type: 'delete', payload: 1};
+
+        const state = todoReducer(demoTodos, action);
+        expect(state.length).toBe(1);
+        expect(state).toEqual([ demoTodos[1]]);
+    })
+
+    test('debe de hacer el toggle del TO DO', () => {
+        const action = {type: 'toggle', payload: 2};
+
+        const state = todoReducer(demoTodos, action);
+        expect(state.length).toBe(2);
+        expect(state[1].done).toBe(true);
+        expect(state[0]).toEqual(demoTodos[0])
+    })
+    
+})
+```
+
+Pruebas en ToDoListItem
+```javascript
+import {shallow} from 'enzyme'
+import React from 'react'
+import { ToDoListItem } from '../../../components/ToDoListItem'
+import { demoTodos } from '../../fixtures/demoTodos'
+
+
+describe('Pruebas en ,ToDoListItem/>', () => {
+
+    const handleDelete = jest.fn();
+    const handleToggle = jest.fn();
+
+    const wrapper = shallow(
+        <ToDoListItem
+            toDo={demoTodos[0]}
+            index={0}
+            handleDelete={handleDelete}
+            handleToggle={handleToggle}
+        />
+    )
+    
+    test('debe de mostrarse correctamente ', () => {                
+        expect(wrapper).toMatchSnapshot();
+    })
+
+    test('debe de llamar la función borrar', () => {
+        
+        wrapper.find('button').simulate('click');
+        expect(handleDelete).toHaveBeenCalledWith(demoTodos[0].id)
+
+    })
+    
+    test('debe de llamar la función toggle', () => {
+
+        wrapper.find('p').simulate('click');
+        expect(handleToggle).toHaveBeenCalledWith(demoTodos[0].id)
+    })
+
+    test('debe de mostrar el texto correctamente', () => {
+        const p = wrapper.find('p');
+        expect(p.text().trim()).toBe(`1. ${demoTodos[0].desc}`)
+    })
+    
+    test('debe de tener la clase complete si el TO DO esta hecho', () => {
+        const todo = demoTodos[0];
+        todo.done = true;
+
+        const wrapper = shallow(
+            <ToDoListItem
+                toDo={todo}
+                index={0}
+                handleDelete={handleDelete}
+                handleToggle={handleToggle}
+            />
+        )
+
+        expect(wrapper.find('p').hasClass('complete')).toBe(true)
+    })
+    
+
+})
+
+```
+
+
+Pruebas en ToDoList
+
+```javascript
+import React from 'react'
+import {shallow} from 'enzyme'
+
+import { ToDoList } from '../../../components/ToDoList'
+import { demoTodos } from '../../fixtures/demoTodos'
+
+
+describe('Pruebas en <ToDoList/>', () => {
+
+    const handleDelete = jest.fn();
+    const handleToggle = jest.fn();
+        
+    const wrapper = shallow(
+        <ToDoList
+            toDos={ demoTodos }
+            handleDelete={handleDelete}
+            handleToggle={handleToggle}
+        />
+    )
+    
+    test('debe de mostrarse correctamente ', () => {
+
+       expect(wrapper).toMatchSnapshot()
+
+    })
+
+    test('debe tener 2 <ToDoListItem />', () => {
+
+        expect(wrapper.find('ToDoListItem').length).toBe(demoTodos.length);
+
+        expect(wrapper.find('ToDoListItem').at(0).prop('handleDelete')).toEqual(expect.any(Function))
+ 
+     })
+    
+
+})
+
+```
+
+Pruebas sobre toDoAdd
+
+```javascript
+import React from 'react'
+import {shallow} from 'enzyme'
+import { ToDoAdd } from '../../../components/ToDoAdd'
+
+
+describe('Pruebas sobre <ToDoAdd/>', () => {
+
+    const handleAddToDo = jest.fn()
+
+    const wrapper = shallow(
+        <ToDoAdd
+            handleAddToDo={handleAddToDo}
+        />
+    )
+    
+    test('debe de mostrarse correctamente ', () => {
+        expect(wrapper).toMatchSnapshot()
+    })
+
+    test('NO debe de llamar handleAddToDo', () => {
+        
+        const formSubmit = wrapper.find('form').prop('onSubmit');
+
+        formSubmit({ preventDefault(){}});
+
+        expect(handleAddToDo).toHaveBeenCalledTimes(0);
+    })
+
+    test('debe de llamar la funcion handleAddToDo', () => {
+        const value = 'Aprender react';
+
+        wrapper.find('input').simulate('change', {
+            target: {
+                value,
+                name: 'description'
+            }
+        })
+
+        const formSubmit = wrapper.find('form').prop('onSubmit');
+
+        formSubmit({ preventDefault(){}});
+
+        expect(handleAddToDo).toHaveBeenCalledTimes(1);
+        expect(handleAddToDo).toHaveBeenCalledWith(expect.any(Object));
+        expect(handleAddToDo).toHaveBeenCalledWith({
+            id: expect.any(Number),
+            desc: value,
+            done: false
+        });
+
+        expect(wrapper.find('input').prop('value')).toBe('')
+
+    })
+    
+})
+
+```
+
+
+Pruebas sobre ToDoApp
+
+```javascript
+
+import React from 'react'
+import { mount, shallow } from 'enzyme'
+
+import { ToDoApp } from '../../../components/ToDoApp'
+import { demoTodos } from '../../fixtures/demoTodos';
+import { act } from '@testing-library/react';
+
+
+describe('Pruebas sobre <ToDoApp/>', () => {
+    
+    const wrapper = shallow(
+        <ToDoApp/>
+    );
+
+    Storage.prototype.setItem = jest.fn(()=>{})
+
+    test('debe de mostrarse correctamente', () => {
+        expect(wrapper).toMatchSnapshot();
+    })
+
+    test('debe de agregar un TO DO', () => {
+        
+        const wrapper = mount(<ToDoApp/>);
+
+        act( () => {
+            wrapper.find('ToDoAdd').prop('handleAddToDo')( demoTodos[0] );
+            wrapper.find('ToDoAdd').prop('handleAddToDo')( demoTodos[1] );
+        })
+
+        expect(wrapper.find('h1').text().trim()).toBe('ToDo App ( 2 )')
+        expect(localStorage.setItem).toHaveBeenCalledTimes(2)
+
+    })
+    
+    test('debe de eliminar un TO DO', () => {
+        wrapper.find('ToDoAdd').prop('handleAddToDo')( demoTodos[0] )
+        wrapper.find('ToDoList').prop('handleDelete')( demoTodos[0].id )
+        expect(wrapper.find('h1').text().trim()).toBe('ToDo App ( 0 )')
+    })
+    
+    
+
+})
+
+```
+
+
+Pruebas sobre useContext
 

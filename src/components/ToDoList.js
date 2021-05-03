@@ -6,6 +6,7 @@ export const ToDoList = ({toDos, handleDelete, handleToggle}) => {
         <>
             {toDos.map( (toDo, index) => (
                 <ToDoListItem 
+                    key={toDo.id}
                     handleDelete={handleDelete} 
                     handleToggle={handleToggle} 
                     toDo={toDo} 

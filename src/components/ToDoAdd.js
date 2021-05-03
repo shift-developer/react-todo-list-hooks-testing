@@ -14,7 +14,7 @@ export const ToDoAdd = ({handleAddToDo}) => {
             return;
         }
 
-        handleAddToDo({id: new Date().getTime(), description, done: false});
+        handleAddToDo({id: new Date().getTime(), desc: description, done: false});
         reset();
     }
     
